@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useReducer } from 'react'
+import UseAsync from './useAsync'
 
-import axios from 'axios'
 
 type User = {
     id: number
@@ -8,51 +8,9 @@ type User = {
     name: string
 }
 
-function reducer(state: any, action: any): { loading: boolean, data?: any[] | null, error?: Error | null } {
-    switch (action.type) {
-        case 'LOADING':
-            return {
-                loading: true,
-                data: null,
-                error: null
-            }
-        case 'SUCCESS':
-            return {
-                loading: false,
-                data: action.data,
-                error: null
-            }
-        case 'ERROR':
-            return {
-                loading: false,
-                data: null,
-                error: action.error
-            }
-        default:
-            throw new Error(`Unhandled action type: ${action.type}`)
-    }
-}
-
-function Users() {
-    const [state, dispatch] = useReducer(reducer, {
-        loading: false,
-        data: null,
-        error: null
-    })
-
-    const fetchUsers = async () => {
-        dispatch({ type: 'LOADING' })
-        try {
-            const response = await axios.get('https://jsonplaceholder.typicode.com/users')
-            dispatch({ type: 'SUCCESS', data: response.data })
-        } catch (e) {
-            dispatch({ type: 'ERROR', error: e })
-        }
-    }
-
-    useEffect(() => {
-        fetchUsers()
-    }, [])
+async function getUsers() {
+    // react hook 규칙에 따르면 커스텀 훅은 capitalized가 되어야 한다. (via https://stackoverflow.com/questions/55846641/react-hook-usestate-is-called-in-function-app-which-is-neither-a-react-funct)
+    const [state, refetch] = UseAsync(getUsers, [])
 
     const { loading, data: users, error } = state
 
@@ -68,7 +26,7 @@ function Users() {
           </li>
                 ))}
             </ul>
-            <button onClick={fetchUsers}>다시 불러오기</button>
+            <button onClick={refetch}>다시 불러오기</button>
         </>
     );
 }
