@@ -27,7 +27,8 @@ function reducer(state: any, action: any) {
 
 function UseAsync(
   callback: any,
-  deps = []
+  deps = [],
+  skip = false
 ): [
   { loading: boolean; data: any[] | null; error: Error | null },
   () => Promise<void>
@@ -49,6 +50,7 @@ function UseAsync(
   }
 
   useEffect(() => {
+    if (skip) return
     fetchData()
     // eslint-disable-next-line
   }, deps)
