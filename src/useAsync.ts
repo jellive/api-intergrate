@@ -26,12 +26,12 @@ function reducer(state: any, action: any) {
 }
 
 function UseAsync(
-  callback: any,
-  deps = [],
+  callback: Function,
+  deps: number[] = [],
   skip = false
 ): [
-  { loading: boolean; data: any[] | null; error: Error | null },
-  () => Promise<void>
+  { loading: boolean; data: any[] | any | null; error: Error | null },
+  () => Promise<any>
 ] {
   const [state, dispatch] = useReducer(reducer, {
     loading: false,
