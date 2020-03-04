@@ -55,7 +55,7 @@ const error = (error: Error) => ({
 // 세가지 액션을 처리하는 리듀서를 만들어줍니다
 // type 은 액션 타입, key 는 리듀서서 사용할 필드 이름입니다 (예: user, users)
 
-export function createAsyncHandler(type: string, key: any) {
+export function createAsyncHandler(type: string, key: string) {
   // 성공, 실패에 대한 액션 타입 문자열을 준비합니다.
   const SUCCESS = `${type}_SUCCESS`
   const ERROR = `${type}_ERROR`
