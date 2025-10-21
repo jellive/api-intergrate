@@ -1,18 +1,7 @@
-import React, { createContext, useReducer, useContext } from 'react'
+import { createContext, useReducer, useContext, type ReactNode } from 'react'
 import { createAsyncDispatcher, createAsyncHandler, initialAsyncState } from './asyncActionUtils'
 import * as api from './api'
-// import axios from 'axios'
-
-interface IUser {
-  loading: boolean
-  data: any[] | any | null
-  error: Error | null
-}
-
-type State = {
-  users: IUser
-  user: IUser
-}
+import type { State, Action, User, AsyncState } from './types'
 
 // // UsersContext에서 사용 할 기본 상태
 // const initialState = {
@@ -50,36 +39,36 @@ type State = {
 // })
 
 // UsersContext 에서 사용 할 기본 상태
-const initialState = {
-  users: initialAsyncState,
-  user: initialAsyncState
-};
+const initialState: State = {
+  users: initialAsyncState as AsyncState<User[]>,
+  user: initialAsyncState as AsyncState<User>
+}
 
-const usersHandler = createAsyncHandler('GET_USERS', 'users');
-const userHandler = createAsyncHandler('GET_USER', 'user');
+const usersHandler = createAsyncHandler('GET_USERS', 'users')
+const userHandler = createAsyncHandler('GET_USER', 'user')
 
 // 위에서 만든 객체 / 유틸 함수들을 사용하여 리듀서 작성
-function usersReducer(state: State, action: any) {
+function usersReducer(state: State, action: Action): State {
   switch (action.type) {
     case 'GET_USERS':
     case 'GET_USERS_SUCCESS':
     case 'GET_USERS_ERROR':
-      return usersHandler(state, action);
+      return usersHandler(state, action)
     case 'GET_USER':
     case 'GET_USER_SUCCESS':
     case 'GET_USER_ERROR':
-      return userHandler(state, action);
+      return userHandler(state, action)
     default:
-      throw new Error(`Unhanded action type: ${action.type}`);
+      throw new Error(`Unhandled action type: ${(action as { type: string }).type}`)
   }
 }
 
 // State 용 Context 와 Dispatch 용 Context 따로 만들어주기
 const UsersStateContext = createContext<State | undefined>(undefined)
-const UsersDispatchContext = createContext<Function | undefined>(undefined)
+const UsersDispatchContext = createContext<((action: Action) => void) | undefined>(undefined)
 
 // 위에서 선언한 두 가지 Context 들의 Provider 로 감싸주는 컴포넌트 생성
-export function UsersProvider({ children }: { children: JSX.Element }) {
+export function UsersProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(usersReducer, initialState)
 
   return (
@@ -92,7 +81,7 @@ export function UsersProvider({ children }: { children: JSX.Element }) {
 }
 
 // State 를 쉽게 조회 할 수 있게 해주는 커스텀 Hook
-export function useUsersState() {
+export function useUsersState(): State {
   const state = useContext(UsersStateContext)
   if (!state) {
     throw new Error('Cannot find UsersProvider')
@@ -101,7 +90,7 @@ export function useUsersState() {
 }
 
 // Dispatch를 쉽게 사용 할 수 있게 해주는 커스텀 Hook
-export function useUsersDispatch() {
+export function useUsersDispatch(): (action: Action) => void {
   const dispatch = useContext(UsersDispatchContext)
   if (!dispatch) {
     throw new Error('Cannot find UsersProvider')
@@ -134,5 +123,5 @@ export function useUsersDispatch() {
 //   }
 // }
 
-export const getUsers = createAsyncDispatcher('GET_USERS', api.getUsers);
-export const getUser = createAsyncDispatcher('GET_USER', api.getUser);
+export const getUsers = createAsyncDispatcher<User[], []>('GET_USERS', api.getUsers)
+export const getUser = createAsyncDispatcher<User, [number]>('GET_USER', api.getUser)

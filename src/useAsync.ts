@@ -1,6 +1,12 @@
-import { useReducer, useEffect } from 'react'
+import { useReducer, useEffect, type DependencyList } from 'react'
+import type { AsyncState } from './types'
 
-function reducer(state: any, action: any) {
+type Action<T> =
+  | { type: 'LOADING' }
+  | { type: 'SUCCESS'; data: T }
+  | { type: 'ERROR'; error: Error }
+
+function reducer<T>(_state: AsyncState<T>, action: Action<T>): AsyncState<T> {
   switch (action.type) {
     case 'LOADING':
       return {
@@ -21,41 +27,39 @@ function reducer(state: any, action: any) {
         error: action.error
       }
     default:
-      throw new Error(`Unhandled action type: ${action.type}`)
+      throw new Error(`Unhandled action type: ${(action as { type: string }).type}`)
   }
 }
 
-function UseAsync(
-  callback: Function,
-  deps: number[] = [],
+function useAsync<T>(
+  callback: () => Promise<T>,
+  deps: DependencyList = [],
   skip = false
-): [
-  { loading: boolean; data: any[] | any | null; error: Error | null },
-  () => Promise<any>
-] {
-  const [state, dispatch] = useReducer(reducer, {
+): [AsyncState<T>, () => Promise<void>] {
+  const [state, dispatch] = useReducer(reducer<T>, {
     loading: false,
     data: null,
-    error: false
+    error: null
   })
 
-  const fetchData = async () => {
+  const fetchData = async (): Promise<void> => {
     dispatch({ type: 'LOADING' })
     try {
       const data = await callback()
       dispatch({ type: 'SUCCESS', data })
     } catch (e) {
-      dispatch({ type: 'ERROR', error: e })
+      const error = e instanceof Error ? e : new Error(String(e))
+      dispatch({ type: 'ERROR', error })
     }
   }
 
   useEffect(() => {
     if (skip) return
     fetchData()
-    // eslint-disable-next-line
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
   return [state, fetchData]
 }
 
-export default UseAsync
+export default useAsync
